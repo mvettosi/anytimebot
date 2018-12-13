@@ -48,6 +48,11 @@ async def register(context):
 
 
 @client.command(pass_context=True)
+async def submit(context, deck):
+    print(f'deck submitted: {deck}')
+
+
+@client.command(pass_context=True)
 async def later(context):
     await context.message.guild.create_text_channel('cool-channel')
 
