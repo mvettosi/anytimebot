@@ -1,0 +1,98 @@
+########### VERSION 2 ###########
+!enterticket tourny-size
+    The message is deleted
+    If the user has not ticket:
+        send sorry message
+    Otherwise:
+        add user to awaiting decklist for anytime of {tourny-size} people
+        send dm with request for decklist
+
+!submit decklist
+    If user is not awaiting decklist:
+        reply sorry message
+    else
+        perform basic validation
+        if there is no tournament in user's server with requested size:
+            create a tournament ID
+            create a hidden channel named "anytime-{ID}"
+        add user to the corresponding anytime channel
+        write welcome message
+        if tournament has become full:
+            create challonge tournament with all partecipants' usernames
+            post list of upcoming matches
+
+!checkin
+    if channel is not anytime channel:
+        tell you can't perform that here
+    else if not partecipant
+        tell you can't checkin
+    else
+        checking user for his upcoming match
+
+!iwon score [username]
+    if channel is not anytime channel:
+        tell you can't perform that here
+    else if user is admin:
+        set {username} as winner
+        post info in next match
+    else:
+        add vote for {username} to be the winner of his ongoing match using {score}
+        if opponent is disualified:
+            set {username} as winner
+            post info in next match
+        if his opponent already used !ilost:
+            if score does not match:
+                call mod
+            else:
+                set {username} as winner
+                post info on next match
+
+!ilost score [username]
+    if channel is not anytime channel:
+        tell you can't perform that here
+    else if user is admin:
+        set {username} as loser
+    else:
+        add vote for {username} to be the loser of his ongoing match using {score}
+        if opponent is disualified:
+            set {username} as winner
+            post info in next match
+        if his opponent already used !iwin:
+            if score does not match:
+                call mod
+            else:
+                set {username} as loser
+
+!decklist username
+    if channel is not anytime channel:
+        tell you can't perform that here
+    else if user is not anytime admin or {username}:
+        tell you can't perform that
+    else:
+        dm the decklist submitted by {username} for the tournament hosted in this channel
+
+!finalize
+    if it was called from a non-anytime channel
+        say sorry and stop
+    if the tournament is not finished:
+        say it's too early
+    if user is anytime admin:
+        finalize tournament represented by the channel it came from
+
+!help
+    if it was called from a non-anytime channel
+        say sorry and stop
+    if there is a timer running to auto-finalize a tournament, restart it
+    get list of online anytime mods
+    select one at random/select them all
+    ping him in current channel
+
+PERIODICALLY
+    fetch all finished anytime tournaments
+    for each one:
+        if at least X time has passed since finals score reported or !help command
+            finalize tournament
+
+    fetch all ongoing matches
+    for each one:
+        disualify each user that did not checkin in time
