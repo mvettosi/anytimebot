@@ -3,21 +3,36 @@
 from discord.ext.commands import Bot
 import asyncio
 
-TOKEN = 'NTIyMTA3MzcyODMxODk5NjQ5.DvGKPg.VdNfFHyTm76G6XgFaT9dl8rmxKc'
+config = {
+    'TOKEN': 'NTIyMTA3MzcyODMxODk5NjQ5.DvGKPg.VdNfFHyTm76G6XgFaT9dl8rmxKc',
+    'servers': {
+        'Testing': {
+            'role': 'Ticket1',
+            'error_message': 'You need the Ticket1 role in order to subscribe to a tournament. Ask a mod, it\'s free!'
+        },
+        'Duel Links Meta': {
+            'role': 'Ticket1',
+            'error_message': 'Hello! Thanks for your interest in DLM anytime tournaments! Unfortunately you don\'t seem'
+                             'to have any meta ticket left, please purchase some in #ticket-channel and try again.'
+        }
+    }
+}
 client = Bot(command_prefix='!')
 
 
 @client.command(pass_context=True)
 async def enterticket(context, size = 4):
-    await context.message.delete()
-    user = context.message.author
+    message = context.message
+    await message.delete()
+    user = message.author
     dm = await user.create_dm()
-    if 'Ticket1' in [role.name for role in user.roles]:
+    guild = message.channel.guild
+    server_config = config['servers'][guild.name]
+    if server_config and server_config['role'] not in [role.name for role in user.roles]:
+        await dm.send(server_config['error_message'])
+    else:
         # TODO add to awaiting submission
         await dm.send(f'Hello {user}! Please provide your deck link using !submit <deckurl>')
-    else:
-        await dm.send(f'Hello {user}! I\'m sorry but you don\'t seem to have DLM tickets in the DLM Discord, '
-                      f'please purchase some and try again')
 
 
 @client.command(pass_context=True)
@@ -48,7 +63,7 @@ async def finalize(context):
 
 
 @client.command(pass_context=True)
-async def help(context):
+async def mod(context):
     # TODO check channel
     # TODO update last_updated for the tournament
     # TODO retrieve list of online mods
@@ -76,4 +91,4 @@ async def on_ready():
     print('------')
 
 
-client.run(TOKEN)
+client.run(config['TOKEN'])
