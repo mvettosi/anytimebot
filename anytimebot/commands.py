@@ -2,16 +2,21 @@
 
 from discord.ext.commands import Bot
 import asyncio
+from anytimebot import anytimes
 
 config = {
     'TOKEN': 'NTIyMTA3MzcyODMxODk5NjQ5.DvGKPg.VdNfFHyTm76G6XgFaT9dl8rmxKc',
     'servers': {
         'Testing': {
             'role': 'Ticket1',
+            'require_decklist': False,
+            'succ_message': 'Hello! You don\'t need any decklist submission so you were added to a tournament already',
             'error_message': 'You need the Ticket1 role in order to subscribe to a tournament. Ask a mod, it\'s free!'
         },
         'Duel Links Meta': {
             'role': 'Ticket1',
+            'require_decklist': True,
+            'succ_message': 'Hello! Please provide your deck link using !submit <deckurl>',
             'error_message': 'Hello! Thanks for your interest in DLM anytime tournaments! Unfortunately you don\'t seem'
                              'to have any meta ticket left, please purchase some in #ticket-channel and try again.'
         }
@@ -31,8 +36,11 @@ async def enterticket(context, size = 4):
     if server_config and server_config['role'] not in [role.name for role in user.roles]:
         await dm.send(server_config['error_message'])
     else:
-        # TODO add to awaiting submission
-        await dm.send(f'Hello {user}! Please provide your deck link using !submit <deckurl>')
+        if server_config['require_decklist']:
+            await anytimes.add_to_awaiting_deck(guild.name, user.name, size)
+        else:
+            await anytimes.add_to_anytime(guild.name, user.name, size)
+        await dm.send(server_config['succ_message'])
 
 
 @client.command(pass_context=True)
