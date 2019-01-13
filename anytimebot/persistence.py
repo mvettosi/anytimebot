@@ -1,15 +1,44 @@
-class Anytime:
-    partecipants = []
+from tinydb import TinyDB, Query
 
-    def __init__(self, size):
-        # TODO check size is power of 2
-        self.size = size
+db = TinyDB('db.json')
 
-    async def addParticipant(self, user, context):
-        self.partecipants.append(user)
-        if len(self.partecipants) == self.size:
-            await self.startTournament(context)
+'''
+{
+    name: 'server name',
+    waiting: [
+        {
+            user: 'user name',
+            size: <tournament size>
+        },
+        {
+            user: 'user name 2',
+            size: <tournament size>
+        }
+    ],
+    anytimes: [
+        {
+            channel: 'channel id',
+            challonge_id: 'challonge id',
+            players: [
+                'player1', 'player2', 'player3', 'player4'
+            ]
+        }
+    ]
+},
+{
+    ...
+}
+'''
 
-    async def startTournament(self, context):
-        await context.message.guild.create_text_channel('cool-channel')
-        print(f'Starting a tournament with users: {self.partecipants}')
+
+async def add_to_waiting_list(server_name, user_id, size):
+    server = db.get(Query().name == server_name)
+    print(f'DEBUG Server before: {server}')
+    if server is not None:
+        server['waiting'] = [user for user in server['waiting'] if user.get('id', None) != user_id]
+    else:
+        server = {'name': server_name, 'waiting': [], 'anytimes': []}
+        db.insert(server)
+    server['waiting'].append({'id': user_id, 'size': size})
+    db.update(server, Query().name == server_name)
+    print(f'DEBUG Server after: {server}')

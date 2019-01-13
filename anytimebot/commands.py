@@ -3,22 +3,23 @@
 from discord.ext.commands import Bot
 import asyncio
 from anytimebot import anytimes
+from anytimebot.anytimes import AnytimeException
 
 config = {
     'TOKEN': 'NTIyMTA3MzcyODMxODk5NjQ5.DvGKPg.VdNfFHyTm76G6XgFaT9dl8rmxKc',
     'servers': {
         'Testing': {
             'role': 'Ticket1',
-            'require_decklist': False,
-            'succ_message': 'Hello! You don\'t need any decklist submission so you were added to a tournament already',
-            'error_message': 'You need the Ticket1 role in order to subscribe to a tournament. Ask a mod, it\'s free!'
+            'require_decklist': True,
+            'role_missing_message': 'You need the Ticket1 role in order to subscribe to a tournament. Ask a mod, '
+                                    'it\'s free! '
         },
         'Duel Links Meta': {
             'role': 'Ticket1',
             'require_decklist': True,
-            'succ_message': 'Hello! Please provide your deck link using !submit <deckurl>',
-            'error_message': 'Hello! Thanks for your interest in DLM anytime tournaments! Unfortunately you don\'t seem'
-                             'to have any meta ticket left, please purchase some in #ticket-channel and try again.'
+            'role_missing_message': 'Hello! Thanks for your interest in DLM anytime tournaments! Unfortunately you '
+                                    'don\'t seem to have any meta ticket left, please purchase some in '
+                                    '#ticket-channel and try again. '
         }
     }
 }
@@ -34,13 +35,27 @@ async def enterticket(context, size = 4):
     guild = message.channel.guild
     server_config = config['servers'][guild.name]
     if server_config and server_config['role'] not in [role.name for role in user.roles]:
-        await dm.send(server_config['error_message'])
+        await dm.send(server_config['role_missing_message'])
     else:
-        if server_config['require_decklist']:
-            await anytimes.add_to_awaiting_deck(guild.name, user.name, size)
-        else:
-            await anytimes.add_to_anytime(guild.name, user.name, size)
-        await dm.send(server_config['succ_message'])
+        try:
+            if server_config['require_decklist']:
+                await anytimes.add_to_awaiting_deck(guild.id, user.id, size)
+                msg = f'Hello! To partecipate in a tournament of size {size} please provide your deck link using ' \
+                    f'!submit <deckurl> '
+            else:
+                await anytimes.add_to_anytime(guild.id, user.id, size)
+                msg = 'Hello! You don\'t need any decklist submission so you were added to a tournament already'
+            await dm.send(msg)
+        except AnytimeException as e:
+            await dm.send(str(e))
+
+
+@client.command(pass_context=True)
+async def exit(context):
+    # TODO check that user is awaiting decklist or waiting or running an anytime
+    # TODO if awaiing, just remove him
+    # TODO if running a tournament, tell him he just gives the win to the opponent
+    pass
 
 
 @client.command(pass_context=True)
@@ -99,4 +114,5 @@ async def on_ready():
     print('------')
 
 
-client.run(config['TOKEN'])
+def run_bot():
+    client.run(config['TOKEN'])
