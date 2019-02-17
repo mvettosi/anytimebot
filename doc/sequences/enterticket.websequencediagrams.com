@@ -1,49 +1,50 @@
 User->AnyChannel: !enteranytime
-AnyChannel->Commands: enteranytime(tournySize)
+AnyChannel->Bot: enteranytime(tournySize)
+Bot->AnyChannel: deleteMessage()
 alt missingRole
-    Commands->User: sorry you cant
+    Bot->User: sorry you cant
 else
     alt server needs decklist
-        Commands->+Anytimes: addToWaitingList(server, user, tournySize)
-            Anytimes->Persistence: addToWaitingList(server, user, tournySize)
-        Anytimes-->-Commands:
-        Commands->User: please submit deck
+        Bot->+Persistence: addToWaitingList(server, user, tournySize)
+        Persistence-->-Bot:
+        Bot->User: please submit deck
         
-        User->Commands: <sends deck>
-        Commands->Commands: checkIsUrl(deckUrl)
-        Commands->Anytimes: addDeckToWaiting(deckUrl)
-        Anytimes->Persistence: addDeckToWaiting(deckUrl)
+        User->Bot: <sends deck>
+        Bot->Bot: checkIsUrl(deckUrl)
+        Bot->Persistence: addDeckToWaiting(deckUrl)
         
-        User->Commands: <sends sideDeck>
-        Commands->Commands: checkIsUrl(sideDeck)
-        Commands->Anytimes: addDeckToWaiting(sideDeck)
-        Anytimes->Persistence: addDeckToWaiting(sideDeck)
+        User->Bot: <sends sideDeck>
+        Bot->Bot: checkIsUrl(sideDeck)
+        Bot->Persistence: addDeckToWaiting(sideDeck)
         
-        User->Commands: <sends extraDeck>
-        Commands->Commands: checkIsUrl(extraDeck)
-        Commands->Anytimes: addDeckToWaiting(extraDeck)
-        Anytimes->Persistence: addDeckToWaiting(extraDeck)
+        User->Bot: <sends extraDeck>
+        Bot->Bot: checkIsUrl(extraDeck)
+        Bot->Persistence: addDeckToWaiting(extraDeck)
         
-        User->Commands: !submit
+        User->Bot: !submit
     end
 
-    Commands->+Anytimes: addPlayer(server, user, tournySize)
-        Anytimes->+Persistence: addPlayer(server, user, tournySize)
-        Persistence-->-Anytimes: tourneyData
-        alt tourneyData is full
-            Anytimes->Persistence: markInProgress(tourneyData.id)
-            Anytimes->+Tournaments: createTournament(tourneyData.players)
-            Tournaments-->-Anytimes: signUrl
-        end
-    Anytimes-->-Commands: tourneyData
-    
-    alt channel tourneyData.id does not exist
-        Commands->Commands: createChannel(tourneyData.id)
+    Bot->+Persistence: addPlayer(server, user, tournySize)
+    Persistence-->-Bot: tourneyData
+    alt tourneyData is full
+        Bot->Persistence: markInProgress(tourneyData.id)
+        Bot->+Tournaments: createTournament(tourneyData.players)
+        Tournaments-->-Bot: signUrl
     end
     
-    Commands->TourneyChannel: hello @User, tourney here
+    alt channel tourneyData.id does not exist
+        Bot->Bot: createChannel(tourneyData.id)
+    end
+    
+    Bot->TourneyChannel: addUserToChannel(user)
+    Bot->TourneyChannel: hello @User, tourney here
     
     alt tourneyData.isComplete
-        Commands->TourneyChannel: guys, tourney ready at tourneyData.signUrl
+        Bot->TourneyChannel: guys, tourney ready at tourneyData.signUrl
+        alt require ticket
+            loop for each partecipant
+                Bot->Bot: removeTicket(user)
+            end
+        end
     end
 end
