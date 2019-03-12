@@ -1,4 +1,4 @@
 # __all__ = ['commands']
-from anytimebot.commands import run_bot
+from anytimebot.bot import run_bot
 
 run_bot()

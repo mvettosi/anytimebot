@@ -31,7 +31,7 @@ db = TinyDB('db.json')
 '''
 
 
-async def add_to_waiting_list(server_name, user_id, size):
+def add_to_waiting_list(server_name, user_id, size):
     server = db.get(Query().name == server_name)
     print(f'DEBUG Server before: {server}')
     if server is not None:
