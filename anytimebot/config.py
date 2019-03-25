@@ -1,5 +1,5 @@
 # Configurations
-TOKEN = 'NTIyMTA3MzcyODMxODk5NjQ5.DvGKPg.VdNfFHyTm76G6XgFaT9dl8rmxKc'
+TOKEN = 'NTU5NTI1NDAzMjMyOTYwNTQy.D3mqiw.q8ahM64wbmTQfE9e2eEj8poTAfA'
 
 servers = {
     'default': {

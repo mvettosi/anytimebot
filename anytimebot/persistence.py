@@ -33,8 +33,11 @@ db = TinyDB('db.json')
 
 def add_to_waiting_list(server_name, user_id, size):
     server = db.get(Query().name == server_name)
+    print('')
+    print(f'add_to_waiting_list({server_name}, {user_id}, {size})')
     print(f'DEBUG Server before: {server}')
     if server is not None:
+        # Search and remove occurrences of the given user from the waiting list
         server['waiting'] = [user for user in server['waiting'] if user.get('id', None) != user_id]
     else:
         server = {'name': server_name, 'waiting': [], 'anytimes': []}
