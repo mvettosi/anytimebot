@@ -23,7 +23,8 @@ join_requests = db.table('join_requests')
 
 '''
 {
-    doc_id: '...',
+    doc_id: 123,
+    tournament_id: 123,
     server_name: 'Server Name',
     size: 4,
     players: [
@@ -50,12 +51,6 @@ def add_to_waiting_list(server_name, user_id, size):
     :param size: The number of players the tournament should reach before start
     :return: the id of this specific request
     """
-    print('')
-    print('')
-    print(f'add_to_waiting_list({server_name}, {user_id}, {size})')
-    print('join_requests before:')
-    pprint.pprint(join_requests.all())
-
     # Remove previous (uncompleted) join requests by this user
     join_requests.remove((where('server_name') == server_name) & (where('user_id') == user_id))
 
@@ -68,9 +63,6 @@ def add_to_waiting_list(server_name, user_id, size):
     }
     request_id = join_requests.insert(new_request)
 
-    print('')
-    print('join_requests after:')
-    pprint.pprint(join_requests.all())
     return request_id
 
 
@@ -86,19 +78,10 @@ def is_join_request_still_valid(request_id):
 
 
 def add_deck(request_id, description, urls):
-    print('')
-    print('')
-    print(f'add_deck({request_id}, {description}, {urls})')
-    print('join_requests before:')
-    pprint.pprint(join_requests.all())
-
     request = join_requests.get(doc_id=request_id)
     request['decks'].append({'text': description, 'urls': urls})
     join_requests.update(request, doc_ids=[request_id])
-
-    print('')
-    print('join_requests after:')
-    pprint.pprint(join_requests.all())
+    return request
 
 
 def submit(request_id):
@@ -126,3 +109,11 @@ def submit(request_id):
     else:
         print(f'The request id {request_id} is invalid! Nothing to submit here...')
         return None
+
+
+def tournament_started(anytime_id, tournament_id):
+    return anytimes.update({'tournament_id': tournament_id}, doc_id=anytime_id)
+
+
+def add_channel_id(channel_id, anytime_id):
+    return anytimes.update({'channel_id': channel_id}, doc_id=anytime_id)

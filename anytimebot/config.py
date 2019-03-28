@@ -20,10 +20,10 @@ servers = {
 # Public utilities
 
 
-def get_server_config(server, field):
+def get_server_config(server_name, field):
     result = None
-    if server in servers:
-        server_config = servers[server]
+    if server_name in servers:
+        server_config = servers[server_name]
     else:
         server_config = servers['default']
     if field in server_config:
@@ -31,9 +31,9 @@ def get_server_config(server, field):
     return result
 
 
-def misses_role(server, user):
-    result = False
-    required_role = get_server_config(server, 'role')
-    if required_role:
-        result = required_role not in [role.name for role in user.roles]
+def has_ticket(server_name, user):
+    result = True
+    required_role = get_server_config(server_name, 'role')
+    if required_role is not None:
+        result = required_role in [role.name for role in user.roles]
     return result
