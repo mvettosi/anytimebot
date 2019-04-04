@@ -23,10 +23,12 @@ async def enterticket(context, size=4):
     # Check user's ticker
     if not config.has_ticket(server.name, user):
         await dm.send(config.get_server_config(server.name, 'role_missing_message'))
-    elif not ((size & (size - 1)) == 0) and size > 0:
-        # Size is not a power of 2
+    elif not is_power_of_two(size):
         await dm.send(f'I\'sorry, but the size "{size}"" is not a power of two! Try with one of these: 2, 4, 8, 16, 32,'
                       f' 64, 128....')
+    elif persistence.is_username_used(user.name, server.id, size):
+        await dm.send(f'I\'sorry, but the user name "{user.name}" is already being used in the currently open Anytime '
+                      f'Tournament of size {size}. Change it and try again!')
     else:
         await add_player(user, server, size)
 
@@ -34,17 +36,14 @@ async def enterticket(context, size=4):
 @client.command(pass_context=True)
 async def test(context):
     message = context.message
-    guild = message.channel.guild
-    category = await get_anytime_category_channel(guild)
-
-    role = await guild.create_role(name='Anytime-1', mentionable=True)
-
-    overwrites = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        guild.me: discord.PermissionOverwrite(read_messages=True),
-        role: discord.PermissionOverwrite(read_messages=True)
-    }
-    channel = await guild.create_text_channel('anytime-1', overwrites=overwrites)
+    user = message.author
+    ticket_to_remove = None
+    for role in user.roles:
+        if 'Ticket' in role.name and (
+                ticket_to_remove is None or ticket_val(ticket_to_remove) < ticket_val(role)
+        ):
+            ticket_to_remove = role
+    await user.remove_roles(ticket_to_remove)
 
 
 # Start
@@ -62,9 +61,13 @@ def run_bot():
     client.run(config.TOKEN)
 
 
+def is_power_of_two(number):
+    return ((number & (number - 1)) == 0) and number > 0
+
+
 async def add_player(user, server, size):
     # Register user and ask for decks
-    request_id = persistence.add_to_waiting_list(server.id, user.id, size)
+    request_id = persistence.add_to_waiting_list(server.id, user, size)
     dm = await get_dm(user)
     await dm.send(config.get_server_config(server.name, 'wait_for_decks_message'))
 
@@ -87,8 +90,8 @@ async def add_player(user, server, size):
             request = persistence.add_deck(request_id, reply.content, urls)
         elif request is None:
             # !submit used, but no decks submitted yet
-            dm.send('At least one deck is needed to complete registration, please send at least one and try again '
-                    'with `!submit`')
+            await dm.send('At least one deck is needed to complete registration, please send at least one and try '
+                          'again with `!submit`')
         else:
             # He's finished
             print(f'Submitting player: {user.name}')
@@ -109,7 +112,7 @@ async def confirm_player(request_id, server, user):
     elif len(anytime_data['players']) == 1:
         # First submitted player: create channel
         anytime_channel = await create_anytime_channel(server, anytime_data.doc_id)
-        anytime_channel.send(f'Hi everyone! This is the channel we\'ll use for the '
+        await anytime_channel.send(f'Hi everyone! This is the channel we\'ll use for the '
                              f'Anytime Tournament #{anytime_data.doc_id}')
         anytime_data = persistence.add_channel_id(anytime_channel.id, anytime_data.doc_id)
     else:
@@ -121,6 +124,16 @@ async def confirm_player(request_id, server, user):
     await user.add_roles(participant_role)
     await anytime_channel.send(f'{user.mention} joins the battle!')
 
+    # Check that everyone still has a ticket, exit the ones that does not
+    for player in anytime_data['players']:
+        discord_player = server.get_member(player['user_id'])
+        if not config.has_ticket(server.name, discord_player):
+            await discord_player.remove_roles(participant_role)
+            persistence.remove_player(anytime_data.doc_id, player['user_id'])
+            await get_dm(discord_player).send(f'Hey, you don\'t seem to have a ticket anymore, so you were removed from'
+                                              f' the Anytime #{anytime_data.doc_id}. If you think this is an error,'
+                                              f'please contact an Anytime Mod!')
+
     # Did the anytime just got full?
     if len(anytime_data['players']) == anytime_data['size']:
         await start_tournament(server, anytime_data)
@@ -129,13 +142,9 @@ async def confirm_player(request_id, server, user):
 async def start_tournament(server, anytime_data):
     anytime_channel = server.get_channel(anytime_data['channel_id'])
     participant_role = await get_participant_role(server, anytime_data.doc_id)
-
-    # TODO Check that everyone still has a ticket, exit the ones that does not
+    players = anytime_data['players']
 
     # Create tournament on challonge
-    players = anytime_data['players']
-    for player in players:
-        player['name'] = await server.get_member(player['user_id']).name
     challonge_tournament = await tournament.create_tournament(anytime_data.doc_id, players)
     anytime_data = persistence.tournament_started(anytime_data.doc_id, challonge_tournament.id)
 
@@ -149,18 +158,18 @@ async def start_tournament(server, anytime_data):
 
     # Remove tickets
     for player in anytime_data['players']:
-        participant = await server.get_member(player.user_id)
+        participant = server.get_member(player['user_id'])
         ticket_to_remove = None
         for role in participant.roles:
             if 'Ticket' in role.name and (
                     ticket_to_remove is None or ticket_val(ticket_to_remove) < ticket_val(role)
             ):
                 ticket_to_remove = role
-        participant.remove_roles(ticket_to_remove)
+        await participant.remove_roles(ticket_to_remove)
 
 
 async def create_anytime_channel(server, anytime_id):
-    category = await get_anytime_category_channel(server)
+    category = get_anytime_category_channel(server)
     participant_role = await get_participant_role(server, anytime_id)
     anytime_mod_role = get_anytime_mod_role(server)
     overwrites = {

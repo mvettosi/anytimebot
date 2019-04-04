@@ -1,4 +1,5 @@
 import random
+import uuid
 
 import challonge
 
@@ -96,12 +97,12 @@ async def create_tournament(anytime_id, players):
     my_user = await challonge.get_user(config.CHALLONGE_USERNAME, config.CHALLONGE_API_KEY)
     new_tournament = await my_user.create_tournament(
         name=f'Anytime Tournament #{anytime_id}',
-        url=f'anytime_{anytime_id}',
+        url=uuid.uuid4().hex,
         check_in_duration=10
     )
 
     for player in players:
-        await new_tournament.add_participant(player['name'])
+        await new_tournament.add_participant(player["user_name"])
 
     await shuffle_seeds(new_tournament)
     await new_tournament.start()
@@ -110,7 +111,7 @@ async def create_tournament(anytime_id, players):
 
 
 async def shuffle_seeds(new_tournament):
-    participants = new_tournament.get_participants()
+    participants = await new_tournament.get_participants()
     seeds = [x for x in range(1, len(participants) + 1)]
     random.shuffle(seeds)
     for participant, seed in zip(participants, seeds):
