@@ -2,8 +2,7 @@ FROM gorialis/discord.py
 
 WORKDIR /app
 
-ADD . /app
-RUN python -m pip install -r requirements.txt
-RUN python -m pip install -e .
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
 
-CMD ["python", "-m", "anytimebot"]
+CMD ["python", "run.py"]

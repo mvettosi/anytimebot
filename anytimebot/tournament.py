@@ -102,17 +102,48 @@ async def create_tournament(anytime_id, players):
     )
 
     for player in players:
-        await new_tournament.add_participant(player["user_name"])
+        await new_tournament.add_participant(player["user_name"], misc=player["user_id"])
 
-    await shuffle_seeds(new_tournament)
+    await new_tournament.shuffle_participants()
     await new_tournament.start()
     print(f'Started Tournament with id={new_tournament.id}: {new_tournament.full_challonge_url}')
-    return new_tournament
 
-
-async def shuffle_seeds(new_tournament):
+    pairing = []
+    users_checked = []
     participants = await new_tournament.get_participants()
-    seeds = [x for x in range(1, len(participants) + 1)]
-    random.shuffle(seeds)
-    for participant, seed in zip(participants, seeds):
-        await participant.change_seed(seed)
+    for player in participants:
+        if player not in users_checked:
+            opponent = await player.get_next_opponent()
+            pairing.append({'player': player.misc, 'opponent': opponent.misc})
+            users_checked.append(opponent)
+
+    return {
+        'id': new_tournament.id,
+        'url': new_tournament.full_challonge_url,
+        'pairings': pairing
+    }
+
+
+async def win(tournament_id, discord_id, score):
+    user = await challonge.get_user(config.CHALLONGE_USERNAME, config.CHALLONGE_API_KEY)
+    tournament = await user.get_tournament(tournament_id)
+    participants = await tournament.get_participants()
+    player = None
+    for participant in participants:
+        if participant.misc == discord_id:
+            player = participant
+            break
+    if player is not None:
+        match = await player.get_next_match()
+        await match.report_winner(player, score)
+        next_match = await player.get_next_match()
+        player1 = await tournament.get_participant(next_match.player1_id)
+        player2 = await tournament.get_participant(next_match.player2_id)
+        next_opponent = player1.misc if player1 == player else player2.misc
+        return {
+            'opponent': next_opponent.misc
+        }
+
+
+async def finalize(tournament_id):
+    return None
