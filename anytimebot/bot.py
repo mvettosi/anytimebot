@@ -7,8 +7,9 @@ from anytimebot import config
 
 # Instantiate bot and load extensions
 client = Bot(command_prefix='!')
-client.load_extension('anytimebot.commands.decklist')
 client.load_extension('anytimebot.commands.enterticket')
+client.load_extension('anytimebot.commands.exit')
+client.load_extension('anytimebot.commands.decklist')
 client.load_extension('anytimebot.commands.finalize')
 client.load_extension('anytimebot.commands.win')
 

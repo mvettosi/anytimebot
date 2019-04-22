@@ -2,3 +2,4 @@
 venv*/
 anytimebot/__pycache__/
 db.json
+anytimebot/commands/__pycache__

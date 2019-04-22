@@ -26,14 +26,14 @@ async def enterticket(context, size=4):
     # Check user's ticker
     if not config.has_ticket(server.name, user):
         await user.send(config.get_server_config(server.name, 'role_missing_message'))
-    # elif not is_power_of_two(size):TODO temp comment
-    #     await user.send(
-    #         f'I\'sorry, but the size "{size}"" is not a power of two! Try with one of these: 2, 4, 8, 16, 32,'
-    #         f' 64, 128....')
-    # elif persistence.is_username_used(user.name, server.id, size):
-    #     await user.send(
-    #         f'I\'sorry, but the user name "{user.name}" is already being used in the currently open Anytime '
-    #         f'Tournament of size {size}. Change it and try again!')
+    elif not is_power_of_two(size):
+        await user.send(
+            f'I\'sorry, but the size "{size}"" is not a power of two! Try with one of these: 2, 4, 8, 16, 32,'
+            f' 64, 128....')
+    elif persistence.is_username_used(user.name, server.id, size):
+        await user.send(
+            f'I\'sorry, but the user name "{user.name}" is already being used in the currently open Anytime '
+            f'Tournament of size {size}. Change it and try again!')
     else:
         try:
             anytime_data = await add_player(context.bot, user, server, size)
@@ -42,15 +42,15 @@ async def enterticket(context, size=4):
                             ' a mod.')
             raise
 
-        # Did the anytime just got full? TODO temp comment
-        # if len(anytime_data['players']) == anytime_data['size']:
-        #     await start_tournament(server, anytime_data)
-        try:
-            await start_tournament(server, anytime_data)
-        except Exception:
-            anytime_channel = server.get_channel(anytime_data['channel_id'])
-            await anytime_channel.send('Error: could not start the tournament. Please ask a mod to start it manually.')
-            raise
+        # Did the anytime just got full?
+        if len(anytime_data['players']) == anytime_data['size']:
+            try:
+                await start_tournament(server, anytime_data)
+            except Exception:
+                anytime_channel = server.get_channel(anytime_data['channel_id'])
+                await anytime_channel.send('Error: could not start the tournament. Please ask a mod to start it '
+                                           'manually.')
+                raise
 
 
 # Helpers
@@ -94,7 +94,7 @@ async def confirm_player(request_id, server, user):
         await user.send('I\'m sorry, there was a problem with your registration.'
                         'Please try again by typing `!enterticket`')
         return
-    elif len(anytime_data['players']) == 1:
+    elif len(anytime_data['players']) == 1: #TODO check that channel dows not exist already, reuse it even if 0 players
         # First submitted player: create channel
         anytime_channel = await create_anytime_channel(server, anytime_data.doc_id)
         await anytime_channel.send(f'Hi everyone! This is the channel we\'ll use for the '

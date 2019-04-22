@@ -1,4 +1,5 @@
 from enum import IntEnum
+from pprint import pprint
 
 from tinydb import TinyDB, where, Query
 
@@ -150,8 +151,9 @@ def add_channel_id(channel_id, anytime_id):
 
 def remove_player(anytime_id, player_id):
     anytime = anytimes.get(doc_id=anytime_id)
-    anytime['players'] = [player for player in anytime['players'] if player.user_id != player_id]
+    anytime['players'] = [player for player in anytime['players'] if player['user_id'] != player_id]
     anytimes.update(anytime, doc_ids=[anytime_id])
+    pprint(anytimes.all())
 
 
 def get_anytime(anytime_id):
