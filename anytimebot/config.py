@@ -6,12 +6,12 @@ CHALLONGE_API_KEY = '5D1gXENxEETwbeNUfRqLjiKvFQ7hj5A87e7jVPa1'
 
 servers = {
     'default': {
-        'role': 'Ticket1',
+        'role': 'Ticket 1',
         'role_missing_message': 'You need the Ticket1 role in order to subscribe to a tournament. Ask a mod, it\'s free!',
         'wait_for_decks_message': "You've been added to the waiting list! Please send your deck, extra deck and side deck as images or in-game urls and then use the !submit command to complete the registration"
     },
     'Duel Links Meta': {
-        'role': 'Ticket1',
+        'role': 'Ticket 1',
         'role_missing_message': 'Hello! Thanks for your interest in DLM anytime tournaments! Unfortunately you don\'t seem to have any meta ticket left, please purchase some in #ticket-channel and try again.'
     }
 }

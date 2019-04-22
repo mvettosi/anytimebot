@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import discord
 from discord.ext import commands
 from anytimebot import config, persistence, tournament
@@ -24,20 +26,30 @@ async def enterticket(context, size=4):
     # Check user's ticker
     if not config.has_ticket(server.name, user):
         await user.send(config.get_server_config(server.name, 'role_missing_message'))
-    elif not is_power_of_two(size):
-        await user.send(
-            f'I\'sorry, but the size "{size}"" is not a power of two! Try with one of these: 2, 4, 8, 16, 32,'
-            f' 64, 128....')
-    elif persistence.is_username_used(user.name, server.id, size):
-        await user.send(
-            f'I\'sorry, but the user name "{user.name}" is already being used in the currently open Anytime '
-            f'Tournament of size {size}. Change it and try again!')
+    # elif not is_power_of_two(size):TODO temp comment
+    #     await user.send(
+    #         f'I\'sorry, but the size "{size}"" is not a power of two! Try with one of these: 2, 4, 8, 16, 32,'
+    #         f' 64, 128....')
+    # elif persistence.is_username_used(user.name, server.id, size):
+    #     await user.send(
+    #         f'I\'sorry, but the user name "{user.name}" is already being used in the currently open Anytime '
+    #         f'Tournament of size {size}. Change it and try again!')
     else:
         try:
-            await add_player(context.bot, user, server, size)
+            anytime_data = await add_player(context.bot, user, server, size)
         except Exception:
             await user.send('Sorry, something went wrong. Please try again and if it\'s not getting better, contact'
-                            'a mod.')
+                            ' a mod.')
+            raise
+
+        # Did the anytime just got full? TODO temp comment
+        # if len(anytime_data['players']) == anytime_data['size']:
+        #     await start_tournament(server, anytime_data)
+        try:
+            await start_tournament(server, anytime_data)
+        except Exception:
+            anytime_channel = server.get_channel(anytime_data['channel_id'])
+            await anytime_channel.send('Error: could not start the tournament. Please ask a mod to start it manually.')
             raise
 
 
@@ -71,8 +83,7 @@ async def add_player(client, user, server, size):
         else:
             # He's finished
             print(f'Submitting player: {user.name}')
-            await confirm_player(request_id, server, user)
-            break
+            return await confirm_player(request_id, server, user)
 
 
 async def confirm_player(request_id, server, user):
@@ -108,9 +119,7 @@ async def confirm_player(request_id, server, user):
                                       f' the Anytime #{anytime_data.doc_id}. If you think this is an error,'
                                       f'please contact an Anytime Mod!')
 
-    # Did the anytime just got full?
-    if len(anytime_data['players']) == anytime_data['size']:
-        await start_tournament(server, anytime_data)
+    return anytime_data
 
 
 async def start_tournament(server, anytime_data):
@@ -126,13 +135,15 @@ async def start_tournament(server, anytime_data):
     msg = f'{participant_role.mention} the tournament has begun!' \
         f'\nThe tournament url is: {tournament_data["url"]}\n'
     for pairing in tournament_data['pairings']:
-        discord_player = server.get_member(pairing['player'])
-        discord_opponent = server.get_member(pairing['opponent'])
+        print('Pairing:')
+        pprint(pairing)
+        discord_player = server.get_member(int(pairing['player']))
+        discord_opponent = server.get_member(int(pairing['opponent']))
         msg += f'\n{discord_player.mention} you are up against {discord_opponent.mention}'
-    msg += f'\n\nYou can submit your score on the website directly, or simply by typing:' \
-        f'\n`!win <games you won>-<games you lost>' \
-        f'\nFor example, to submit a 2-1 victory: `!win 2-1`' \
-        f'\n\nGood luck everyone, and have fun!'
+    # msg += f'\n\nYou can submit your score on the website directly, or simply by typing:' \
+    #     f'\n`!win <games you won>-<games you lost>`' \
+    #     f'\nFor example, to submit a 2-1 victory: `!win 2-1`' \
+    msg += f'\n\nGood luck everyone, and have fun!'
     await anytime_channel.send(msg)
 
     # Remove tickets

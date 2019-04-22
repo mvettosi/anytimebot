@@ -20,7 +20,7 @@ async def test(ctx):
 
 
 @client.command()
-async def reload_extensions(ctx):
+async def reload(ctx):
     for extention in client.extensions:
         print(f'Reloading extension: {extention}')
         client.reload_extension(extention)

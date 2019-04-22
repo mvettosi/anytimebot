@@ -10,7 +10,7 @@ def setup(bot):
 
 # Command definition
 @commands.command()
-async def decklist(context, mention):
+async def decklist(context, mention=None):
     anytime = await get_anytime(context)
 
     if anytime is None:
@@ -37,4 +37,5 @@ async def decklist(context, mention):
         await context.message.channel.send(f'User {mention} does not seem to be playing in this tournament!')
         return
 
+    await context.message.author.send(f'Decklists submitted by {discord_player.name} for the Anytime #{anytime.doc_id}')
     await send_decks(context.message.author, anytime_player['decks'])

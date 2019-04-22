@@ -1,5 +1,7 @@
 import re
 
+from discord import Embed
+
 from anytimebot import persistence
 
 
@@ -15,15 +17,23 @@ async def get_anytime(context):
         anytime_data = persistence.get_anytime(id)
         if anytime_data is None:
             # await context.message.delete()
-            await context.message.send('This doesn\'t seem to be an anytime channel!')
+            await channel.send('An error occurred, please try again!')
         else:
             return anytime_data
+    else:
+        await channel.send('This doesn\'t seem to be an anytime channel!')
 
 
 def get_anytime_category_channel(guild):
     for cat in guild.categories:
         if cat.name == 'anytimes':
             return cat
+
+
+def get_decklists_channel(guild):
+    for channel in guild.channels:
+        if channel.name == '1st-place-decks':
+            return channel
 
 
 async def get_participant_role(guild, anytime_id):
@@ -48,4 +58,7 @@ def ticket_val(role):
 
 
 async def send_decks(destination, decks):
-    pass
+    for deck in decks:
+        await destination.send(deck['text'])
+        for url in deck['urls']:
+            await destination.send(url)
