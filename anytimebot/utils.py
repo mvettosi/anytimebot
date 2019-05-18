@@ -59,6 +59,8 @@ def ticket_val(role):
 
 async def send_decks(destination, decks):
     for deck in decks:
-        await destination.send(deck['text'])
+        if deck['text']:
+            await destination.send(deck['text'])
         for url in deck['urls']:
-            await destination.send(url)
+            if url:
+                await destination.send(url)

@@ -55,12 +55,12 @@ def is_username_used(user_name, server_id, tournament_size):
     anytime = Query()
     player = Query()
     return anytimes.contains(
-        anytime.server_id == server_id and
-        anytime.size == tournament_size and
-        anytime.status == AnytimeStatus.RECRUITING and
-        anytime.players.any(
+        (anytime.server_id == server_id) &
+        (anytime.size == tournament_size) &
+        (anytime.status == AnytimeStatus.RECRUITING) &
+        (anytime.players.any(
             player.user_name == user_name
-        )
+        ))
     )
 
 

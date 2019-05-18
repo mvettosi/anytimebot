@@ -103,9 +103,6 @@ async def create_tournament(anytime_id, players):
 
     for player in players:
         await new_tournament.add_participant(player["user_name"], misc=player["user_id"])
-        await new_tournament.add_participant('One', misc=player["user_id"])
-        await new_tournament.add_participant('Two', misc=player["user_id"])
-        await new_tournament.add_participant('Three', misc=player["user_id"])
 
     await new_tournament.shuffle_participants()
     await new_tournament.start()

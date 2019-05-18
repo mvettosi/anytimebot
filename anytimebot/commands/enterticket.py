@@ -94,15 +94,16 @@ async def confirm_player(request_id, server, user):
         await user.send('I\'m sorry, there was a problem with your registration.'
                         'Please try again by typing `!enterticket`')
         return
-    elif len(anytime_data['players']) == 1: #TODO check that channel dows not exist already, reuse it even if 0 players
+
+    # Retrieve anytime channel
+    anytime_channel = server.get_channel(anytime_data['channel_id']) if 'channel_id' in anytime_data else None
+
+    if anytime_channel is None:
         # First submitted player: create channel
         anytime_channel = await create_anytime_channel(server, anytime_data.doc_id)
         await anytime_channel.send(f'Hi everyone! This is the channel we\'ll use for the '
                                    f'Anytime Tournament #{anytime_data.doc_id}')
         anytime_data = persistence.add_channel_id(anytime_channel.id, anytime_data.doc_id)
-    else:
-        # Retrieve anytime channel
-        anytime_channel = server.get_channel(anytime_data['channel_id'])
 
     # Notify user in the anytime channel
     participant_role = await get_participant_role(server, anytime_data.doc_id)
