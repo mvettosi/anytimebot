@@ -1,47 +1,56 @@
 from enum import IntEnum
 from pprint import pprint
+import sys
 
 from tinydb import TinyDB, where, Query
 
-db = TinyDB('db.json')
-'''
-{
-    doc_id: '...',
-    server_id: '...',
-    user_id: '...',
-    tournament_size: '4',
-    decks: [
-        {
-            text: 'some description',
-            urls: [
-                'image url'
-            ]
-        }
-    ]
-}
-'''
-join_requests = db.table('join_requests')
 
-'''
-{
-    doc_id: 123,
-    tournament_id: 123,
-    server_id: '...',
-    size: 4,
-    status: AnytimeStatus
-    players: [
+DB_FILE = 'db.json'
+this = sys.modules[__name__]
+
+def init():
+    this.db = TinyDB(DB_FILE)
+    '''
+    {
+        doc_id: '...',
+        server_id: '...',
         user_id: '...',
-        user_name: '...',
+        tournament_size: '4',
         decks: [
             {
                 text: 'some description',
-                url: 'image url'
+                urls: [
+                    'image url'
+                ]
             }
         ]
-    ]
-}
-'''
-anytimes = db.table('anytimes')
+    }
+    '''
+    this.join_requests = this.db.table('join_requests')
+
+    '''
+    {
+        doc_id: 123,
+        tournament_id: 123,
+        server_id: '...',
+        size: 4,
+        status: AnytimeStatus
+        players: [
+            user_id: '...',
+            user_name: '...',
+            decks: [
+                {
+                    text: 'some description',
+                    url: 'image url'
+                }
+            ]
+        ]
+    }
+    '''
+    this.anytimes = this.db.table('anytimes')
+
+
+init()
 
 
 class AnytimeStatus(IntEnum):
