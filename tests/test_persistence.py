@@ -49,6 +49,7 @@ def test_is_username_used(
     status = persistence.AnytimeStatus.RECRUITING,
     user_name = TEST_USER_NAME,
     user_id = TEST_USER_NAME):
+
     persistence.anytimes.insert({
         'server_id': server_id,
         'size': size,
