@@ -15,14 +15,14 @@ named 'config.json'.
 ## Obtain Discord test token
 To ensure running this bot won't clash with any existing bot, you should create
 a token just to run this instance. To achieve this, follow the instructions at
-https://twentysix26.github.io/Red-Docs/red_guide_bot_accounts/
+https://twentysix26.github.io/Red-Docs/red_guide_bot_accounts/.  
 At this point, you can paste your Discord Token into the configuration file, in
 the appropriate field.
 
 ## Obtain Challonge credentials
 To obtain these, just sign up at https://challonge.com and create an API Key following
-the instructions in https://api.challonge.com/v1
-Once done, paste both your username and the api key inside the config file
+the instructions in https://api.challonge.com/v1.  
+Once done, paste both your username and the api key inside the config file.
 
 ## Install dependencies
 Before running the bot, it is necessary to create a virtual environment and install
