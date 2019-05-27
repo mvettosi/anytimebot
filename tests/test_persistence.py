@@ -1,7 +1,9 @@
 from unittest import mock
 from anytimebot import persistence
 from tinydb import TinyDB
+from unittest import mock
 import os
+import pprint
 
 def setup_function(function):
     """ setup any state tied to the execution of the given function.
@@ -15,6 +17,13 @@ def teardown_function(function):
     call.
     """
     persistence.db.close()
+
+
+class MockUser:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
 
 TEST_USER_NAME = "username"
 TEST_SERVER_ID = "qwer1234"
@@ -40,6 +49,28 @@ def test_is_username_used_wrong_name():
 
 def test_is_username_used_wrong_user_id():
     assert test_is_username_used(user_id = TEST_USER_NAME + 'a')
+
+def test_add_to_waiting_list_empty_db():
+    persistence.add_to_waiting_list(
+        TEST_SERVER_ID,
+        MockUser(
+            name = TEST_USER_NAME,
+            id = TEST_USER_NAME
+        ),
+        TEST_TOURNAMENT_SIZE
+    )
+
+    all_requests = persistence.join_requests.all()
+    assert len(all_requests) == 1
+    request = all_requests[0]
+    assert request['server_id'] == TEST_SERVER_ID
+    assert request['user_id'] == TEST_USER_NAME
+    assert request['user_name'] == TEST_USER_NAME
+    assert request['tournament_size'] == TEST_TOURNAMENT_SIZE
+    assert len(request['decks']) == 0
+
+def test_add_to_waiting_list_previous_req():
+    pass
 
 
 # Helper functions
