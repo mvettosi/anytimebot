@@ -6,3 +6,4 @@ anytimebot/commands/__pycache__
 .gcloudignore
 output.txt
 tests/__pycache__
+config.json
