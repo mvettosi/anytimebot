@@ -1,3 +1,4 @@
 discord.py==1.0.1
 achallonge==1.8
 tinydb==3.12.2
+pytest==4.5.0
