@@ -47,7 +47,8 @@ async def enterticket(context, size=4):
             try:
                 await start_tournament(server, anytime_data)
             except Exception:
-                anytime_channel = server.get_channel(anytime_data['channel_id'])
+                anytime_channel = server.get_channel(
+                    anytime_data['channel_id'])
                 await anytime_channel.send('Error: could not start the tournament. Please ask a mod to start it '
                                            'manually.')
                 raise
@@ -96,14 +97,16 @@ async def confirm_player(request_id, server, user):
         return
 
     # Retrieve anytime channel
-    anytime_channel = server.get_channel(anytime_data['channel_id']) if 'channel_id' in anytime_data else None
+    anytime_channel = server.get_channel(
+        anytime_data['channel_id']) if 'channel_id' in anytime_data else None
 
     if anytime_channel is None:
         # First submitted player: create channel
         anytime_channel = await create_anytime_channel(server, anytime_data.doc_id)
         await anytime_channel.send(f'Hi everyone! This is the channel we\'ll use for the '
                                    f'Anytime Tournament #{anytime_data.doc_id}')
-        anytime_data = persistence.add_channel_id(anytime_channel.id, anytime_data.doc_id)
+        anytime_data = persistence.add_channel_id(
+            anytime_channel.id, anytime_data.doc_id)
 
     # Notify user in the anytime channel
     participant_role = await get_participant_role(server, anytime_data.doc_id)
@@ -130,7 +133,10 @@ async def start_tournament(server, anytime_data):
 
     # Create tournament on challonge
     tournament_data = await tournament.create_tournament(anytime_data.doc_id, players)
-    anytime_data = persistence.tournament_started(anytime_data.doc_id, tournament_data['id'])
+    updated_data = persistence.tournament_started(
+        anytime_data.doc_id, tournament_data['id'])
+    # If something went wrong, carry on finishing, but keep track of this for future features
+    anytime_data = updated_data if updated_data is not None else anytime_data
 
     # Notify that tournament started
     msg = f'{participant_role.mention} the tournament has begun!' \
@@ -153,7 +159,8 @@ async def start_tournament(server, anytime_data):
         ticket_to_remove = None
         for role in participant.roles:
             if 'Ticket' in role.name and (
-                    ticket_to_remove is None or ticket_val(ticket_to_remove) < ticket_val(role)
+                    ticket_to_remove is None or ticket_val(
+                        ticket_to_remove) < ticket_val(role)
             ):
                 ticket_to_remove = role
         await participant.remove_roles(ticket_to_remove)

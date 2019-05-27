@@ -8,6 +8,7 @@ from tinydb import TinyDB, where, Query
 DB_FILE = 'db.json'
 this = sys.modules[__name__]
 
+
 def init():
     this.db = TinyDB(DB_FILE)
     '''
@@ -83,7 +84,8 @@ def add_to_waiting_list(server_id, user, size):
     :return: the id of this specific request
     """
     # Remove previous (uncompleted) join requests by this user
-    join_requests.remove((where('server_id') == server_id) & (where('user_id') == user.id))
+    join_requests.remove((where('server_id') == server_id) &
+                         (where('user_id') == user.id))
 
     # Insert new request
     new_request = {
@@ -144,25 +146,43 @@ def submit(request_id):
         join_requests.remove(doc_ids=[request_id])
         return anytime
     else:
-        print(f'The request id {request_id} is invalid! Nothing to submit here...')
+        print(
+            f'The request id {request_id} is invalid! Nothing to submit here...')
         return None
 
 
 def tournament_started(anytime_id, tournament_id):
-    anytimes.update({'tournament_id': tournament_id, 'status': AnytimeStatus.RUNNING}, doc_ids=[anytime_id])
-    return anytimes.get(doc_id=anytime_id)
+    try:
+        anytimes.update({'tournament_id': tournament_id,
+                         'status': AnytimeStatus.RUNNING}, doc_ids=[anytime_id])
+    except KeyError:
+        print(
+            f'Could not mark tournament with id={anytime_id} as started: tournament id not found!!')
+        return None
+    else:
+        return anytimes.get(doc_id=anytime_id)
 
 
 def add_channel_id(channel_id, anytime_id):
-    anytimes.update({'channel_id': channel_id}, doc_ids=[anytime_id])
-    return anytimes.get(doc_id=anytime_id)
+    try:
+        anytimes.update({'channel_id': channel_id}, doc_ids=[anytime_id])
+    except KeyError:
+        print(
+            f'Could not add channel to tournament with id={anytime_id}: tournament id not found!!')
+        return None
+    else:
+        return anytimes.get(doc_id=anytime_id)
 
 
 def remove_player(anytime_id, player_id):
     anytime = anytimes.get(doc_id=anytime_id)
-    anytime['players'] = [player for player in anytime['players'] if player['user_id'] != player_id]
-    anytimes.update(anytime, doc_ids=[anytime_id])
-    pprint(anytimes.all())
+    if anytime is not None:
+        anytime['players'] = [player for player in anytime['players']
+                              if player['user_id'] != player_id]
+        anytimes.update(anytime, doc_ids=[anytime_id])
+        return anytimes.get(doc_id=anytime_id)
+    else:
+        print(f'The provied anytime with id={anytime_id} was not found!')
 
 
 def get_anytime(anytime_id):
