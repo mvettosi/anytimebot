@@ -101,34 +101,36 @@ async def create_tournament(anytime_id, players):
         check_in_duration=10
     )
 
-    for player in players:
-        await new_tournament.add_participant(player["user_name"], misc=player["user_id"])
-
-    await new_tournament.shuffle_participants()
-    await new_tournament.start()
-    print(f'Started Tournament with id={new_tournament.id}: {new_tournament.full_challonge_url}')
-
-    pairing = []
-    users_checked = []
-    participants = await new_tournament.get_participants()
-    for player in participants:
-        if player not in users_checked:
-            opponent = await player.get_next_opponent()
-            pairing.append({'player': player.misc, 'opponent': opponent.misc})
-            users_checked.append(opponent)
-
-    return {
-        'id': new_tournament.id,
-        'url': new_tournament.full_challonge_url,
-        'pairings': pairing
-    }
+    # for player in players:
+    #     await new_tournament.add_participant(player["user_name"], misc=player["user_id"])
+    #
+    # await new_tournament.shuffle_participants()
+    # await new_tournament.start()
+    # print(
+    #     f'Started Tournament with id={new_tournament.id}: {new_tournament.full_challonge_url}')
+    #
+    # pairing = []
+    # users_checked = []
+    # participants = await new_tournament.get_participants()
+    # for player in participants:
+    #     if player not in users_checked:
+    #         opponent = await player.get_next_opponent()
+    #         pairing.append({'player': player.misc, 'opponent': opponent.misc})
+    #         users_checked.append(opponent)
+    #
+    # return {
+    #     'id': new_tournament.id,
+    #     'url': new_tournament.full_challonge_url,
+    #     'pairings': pairing
+    # }
 
 
 async def win(tournament_id, discord_id, score):
     user = await challonge.get_user(config.CHALLONGE_USERNAME, config.CHALLONGE_API_KEY)
     tournament = await user.get_tournament(tournament_id)
     participants = await tournament.get_participants()
-    player = next((participant for participant in participants if participant.misc == discord_id), None)
+    player = next(
+        (participant for participant in participants if participant.misc == discord_id), None)
     if player is not None:
         match = await player.get_next_match()
         await match.report_winner(player, score)
